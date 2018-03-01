@@ -1,0 +1,14 @@
+extends layout
+
+block content
+
+  h1 ID: #{actuacioninstance._id}
+  
+  p #[strong Title:] 
+    a(href=actuacioninstance.url) #{actuacioninstance.descripcion}
+  p #[strong Tipo:] #{actuacioninstance.tipo}
+  hr
+  p
+     a(href=actuacioninstance.url+'/delete') Eliminar actuación
+  p
+     a(href=actuacioninstance.url+'/update') Actualizar actuación

@@ -1,0 +1,52 @@
+doctype html
+html(lang='en')
+  head
+    title= title
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js')
+    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    div(class='container-fluid')
+      div(class='row')
+        div(class='col-sm-2')
+          block sidebar
+            ul(class='sidebar-nav')
+              li 
+                a(href='/catalog') Inicio
+              li 
+                a(href='/catalog/persona') Listado Personas
+              li 
+                a(href='/catalog/dependencia') Listado Dependencias
+              li 
+                a(href='/catalog/ubicacion') Listado Ubicaciones
+              li 
+                a(href='/catalog/actuacion') Listado Actuaciones
+              li
+                a(href='/catalog/registro') Listado Registro
+              li
+                hr
+              li 
+                a(href='/catalog/persona/create') Crea Persona
+              li 
+                a(href='/catalog/dependencia/create') Crea Dependencia
+              li 
+                a(href='/catalog/ubicacion/create') Crea Ubicacion
+              li 
+                a(href='/catalog/actuacion/create') Crea Actuacion
+              li 
+                a(href='/catalog/registro/create') Crea Registro
+              li
+                hr
+              li 
+                a(href='/wm01.html') Actuaciones por Cantidad
+              li 
+                a(href='/wm02.html') Actuaciones por Tipo
+              li 
+                a(href='/cpmap1.html') Totales por Pais				
+              li 
+                a(href='/Actuaciones.html') Total de Actuaciones por Tipo				
+        div(class='col-sm-10')
+          block content

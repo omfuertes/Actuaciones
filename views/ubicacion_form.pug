@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h1=title
+  form(method='POST' action='')
+    div.form-group
+      label(for='ciudad') Ciudad:
+      input#ciudad.form-control(type='text' placeholder='Nombre ciudad' name='ciudad' required='true' value=(undefined===ubicacion ? '' : ubicacion.ciudad))
+      label(for='pais') Pais:
+      input#pais.form-control(type='text' placeholder='Nombre pais' name='pais' required='true' value=(undefined===ubicacion ? '' : ubicacion.pais))
+    div.form-group
+      label(for='continente') Continente:
+      select#continente.form-control(type='select' placeholder='Seleccione continente' name='continente' required='true')
+        option(value='America Norte') America Norte
+        option(value='America Sur') America Sur
+        option(value='America Central') America Central
+        option(value='Antartida') Antartida
+        option(value='Africa') Africa
+        option(value='Asia') Asia
+        option(value='Europa') Europa
+        option(value='Ocenaia') Oceania
+   
+    button.btn.btn-primary(type='submit') Graba
+    if errors 
+     ul
+      for error in errors
+        li!= error.msg

@@ -1,0 +1,32 @@
+extends layout
+
+block content
+  h1=title
+
+  form(method='POST' action='')
+    div.form-group
+      label(for='nombre') Nombres:
+      input#nombre.form-control(type='text', placeholder='nombre' name='nombre' required='true' value=(undefined===persona ? '' : persona.nombre) )
+      label(for='apellido') Apellidos:
+      input#apellido.form-control(type='text', placeholder='apellido' name='apellido' required='true' value=(undefined===persona ? '' : persona.apellido))
+    div.form-group
+      label(for='nacimiento') Fecha de nacimiento:
+      input#nacimiento.form-control(type='date', name='nacimiento', value=(undefined===persona ? '' : persona.nacimiento) )
+      label(for='nacionalidad') Nacionalidad:
+      input#nacionalidad.form-control(type='text', placeholder='nacionalidad' name='nacionalidad' required='true' value=(undefined===persona ? '' : persona.nacionalidad) )   
+    div.form-group
+      label(for='genero') Genero:
+      select#status.form-control(type='select' placeholder='Escoja el genero' name='genero' required='true')
+        option(value='Hombre') Hombre
+        option(value='Mujer') Mujer
+        option(value='Otro') Otro
+    div.form-group
+        label(for='loc[0]') Longitud:
+        input#longitud.form-control(type='text', name='longitud', value=(undefined===persona ? '' : persona.loc[0]) )
+        label(for='loc[1]') Latitud:
+        input#latitud.form-control(type='text', name='latitud' value=(undefined===persona ? '' : persona.loc[1]) )   
+    button.btn.btn-primary(type='submit') Submit
+  if errors 
+    ul
+      for error in errors
+        li!= error.msg

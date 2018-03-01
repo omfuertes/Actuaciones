@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  h1= title
+  
+  ul
+  each actuacion in actuacion_list
+    li
+      a(href=actuacion.url) #{actuacion.descripcion} 
+      | (#{actuacion.tipo})
+
+  else
+    li No hay actuaciones.

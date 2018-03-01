@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h1 #{"Actuacion"}: #{actuacion.descripcion}
+  p= actuacion.lifespan
+  
+  if actuacion_registroinstances.length
+  
+    p #[strong Debe eliminar los siguientes registros antes de eliminar esta actuacion.]
+  
+    div(style='margin-left:20px;margin-top:20px')
+
+      h4 Registros
+    
+      dl
+      each registro in actuacion_registroinstances
+        dt 
+          a(href=registro.url) #{registro.nrotra}
+        dd #{registro.fecha} #{registro.valor}
+  else
+    p Seguro que desea eliminar esta actuacion?
+    
+    form(method='POST' action='')
+      div.form-group
+        input#actuacionid.form-control(type='hidden',name='actuacionid', required='true', value=actuacion._id )
+
+      button.btn.btn-primary(type='submit') Eliminar

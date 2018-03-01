@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h1 #{"Dependencia"}: #{dependencia.ciudad}
+  p= dependencia.lifespan
+  
+  if dependencia_registroinstances.length
+  
+    p #[strong Debe eliminar los siguientes registros antes de eliminar esta dependencia.]
+  
+    div(style='margin-left:20px;margin-top:20px')
+
+      h4 Registros
+    
+      dl
+      each registro in dependencia_registroinstances
+        dt 
+          a(href=registro.url) #{registro.nrotra}
+        dd #{registro.fecha} #{registro.valor}
+  else
+    p Seguro que desea eliminar esta dependencia?
+    
+    form(method='POST' action='')
+      div.form-group
+        input#dependenciaid.form-control(type='hidden',name='dependenciaid', required='true', value=dependencia._id )
+
+      button.btn.btn-primary(type='submit') Eliminar

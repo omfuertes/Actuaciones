@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  h1= title
+  
+  ul
+  each dependencia in dependencia_list
+    li 
+      a(href=dependencia.url) #{dependencia.nombre} 
+      |  - #{dependencia.tipod}
+      ul
+         li
+          p Ubicación long/lat: (#{dependencia.loc[0]} / #{dependencia.loc[1]}) (#{dependencia.ubicacion.ciudad} , #{dependencia.ubicacion.pais} / #{dependencia.ubicacion.continente})
+  else
+    li No hay dependencias.

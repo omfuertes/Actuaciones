@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  h1=title
+  form(method='POST' action='')
+    div.form-group
+      label(for='descripcion') Descripcion:
+      input#descripcion.form-control(type='text' placeholder='Descripcion' name='descripcion' required='true' value=(undefined===actuacion ? '' : actuacion.descripcion))
+    div.form-group
+      label(for='tipo') Tipo:
+      select#tipod.form-control(type='select' placeholder='Seleccione tipo' name='tipod' required='true')
+        option(value='SOLICITUD') Solicitud
+        option(value='VISADO') Embajada
+        option(value='NOTARIALES') Notariales
+        option(value='CENSO') Censo
+        option(value='PASAPORTE') Pasaporte
+        option(value='LEGALIZACIONES') Legalizaciones
+        option(value='TRANSFERENCIA') Transferencia
+        option(value='LEGALIZACION') Legalizacion
+        option(value='NATURALIZACIONES') Naturalizaciones
+        option(value='COPIA CERTIFICADA VISADO') Copia certificada visado
+        option(value='APOSTILLA') Apostilla
+   
+    button.btn.btn-primary(type='submit') Graba
+    if errors 
+     ul
+      for error in errors
+        li!= error.msg

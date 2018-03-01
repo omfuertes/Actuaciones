@@ -1,0 +1,19 @@
+extends layout
+
+block content
+
+  h1 ID: #{registroinstance._id}
+  
+  p #[strong Title:] 
+    a(href=registroinstance.url) #{registroinstance.nrotra}
+    p #[strong Actuacion:] #{registroinstance.actuacion}
+    p #[strong Persona:] #{registroinstance.persona}
+    p #[strong Dependencia:] #{registroinstance.dependencia}  
+    p #[strong Fecha:] #{registroinstance.fecha}
+    p #[strong Valor:] #{registroinstance.valor}
+    p #[strong Estado:] #{registroinstance.estado}
+  hr
+  p
+     a(href=registroinstance.url+'/delete') Eliminar registro
+  p
+     a(href=registroinstance.url+'/update') Actualizar registro

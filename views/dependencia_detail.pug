@@ -1,0 +1,15 @@
+extends layout
+
+block content
+
+  h1 ID: #{dependenciainstance._id}
+  
+  p #[strong Title:] 
+    a(href=dependenciainstance.url) #{dependenciainstance.nombre}
+  p #[strong Tipo:] #{dependenciainstance.tipod}
+  p #[strong Ubicaion:] #{dependenciainstance.ubicacion}
+  hr
+  p
+     a(href=dependenciainstance.url+'/delete') Eliminar dependencia
+  p
+     a(href=dependenciainstance.url+'/update') Actualizar dependencia

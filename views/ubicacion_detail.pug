@@ -1,0 +1,15 @@
+extends layout
+
+block content
+
+  h1 ID: #{ubicacioninstance._id}
+  
+  p #[strong Title:] 
+    a(href=ubicacioninstance.url) #{ubicacioninstance.ciudad}
+  p #[strong Pais:] #{ubicacioninstance.pais}
+  p #[strong Continente:] #{ubicacioninstance.continente}
+  hr
+  p
+     a(href=ubicacioninstance.url+'/delete') Eliminar ubicacion
+  p
+     a(href=ubicacioninstance.url+'/update') Actualizar ubicacion

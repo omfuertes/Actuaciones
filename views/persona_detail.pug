@@ -1,0 +1,16 @@
+extends layout
+
+block content
+
+  h1 ID: #{personainstance._id}
+  
+  p #[strong Persona:] 
+    a(href=personainstance.url) #{personainstance.nomper}
+  p #[strong Nacionalidad:] #{personainstance.nacionalidad}
+  p #[strong Nacimiento:] #{personainstance.nacimiento}
+  
+  hr
+  p
+     a(href=personainstance.url+'/delete') Eliminar persona
+  p
+     a(href=personainstance.url+'/update') Actualizar persona

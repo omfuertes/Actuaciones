@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h1 #{"Ubicacion"}: #{ubicacion.ciudad}
+  p= ubicacion.lifespan
+  
+  if ubicacion_dependenciainstances.length
+  
+    p #[strong Debe eliminar las siguientes dependencias antes de eliminar esta ubicación.]
+  
+    div(style='margin-left:20px;margin-top:20px')
+
+      h4 Dependencias
+    
+      dl
+      each dependencia in ubicacion_dependenciainstances
+        dt 
+          a(href=dependencia.url) #{dependencia.nombre}
+        dd #{dependencia.tipod} #{dependencia.loc}
+  else
+    p Seguro que desea eliminar esta ubicacion?
+    
+    form(method='POST' action='')
+      div.form-group
+        input#ubicacionid.form-control(type='hidden',name='ubicacionid', required='true', value=ubicacion._id )
+
+      button.btn.btn-primary(type='submit') Eliminar

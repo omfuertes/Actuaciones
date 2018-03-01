@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  h1= title
+  
+  ul
+  each registro in registro_list
+    li 
+      a(href=registro.url) #{registro.nrotra} 
+      |  - (#{registro.actuacion.descripcion} - #{registro.actuacion.tipo})
+      ul
+         li
+          p <strong>beneficiario:</strong> (#{registro.persona.nomper} #{registro.persona.nacionalidad}) <strong> fecha:</strong>  #{registro.regfecha} <strong> valor:</strong>  #{registro.valor} <strong> estado:</strong>  #{registro.estado}
+  else
+    li No hay registros

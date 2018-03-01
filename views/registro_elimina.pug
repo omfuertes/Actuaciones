@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  h1 #{"Registro"}: #{registro.nrotra}
+  p= registro.lifespan
+  dt 
+    dd #{registro.fecha} #{registro.valor}
+  
+  p Seguro que desea eliminar este Registro?
+    
+    form(method='POST' action='')
+      div.form-group
+        input#registroid.form-control(type='hidden',name='registroid', required='true', value=registro._id )
+
+      button.btn.btn-primary(type='submit') Eliminar

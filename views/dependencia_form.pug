@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  h1=title
+  form(method='POST' action='')
+    div.form-group
+      label(for='nombre') Dependencia:
+      input#nombre.form-control(type='text' placeholder='Nombre dependencia1' name='nombre' required='true' value=(undefined===dependencia ? '' : dependencia.nombre))
+    div.form-group
+      label(for='tipod') Tipo:
+      select#tipod.form-control(type='select' placeholder='Seleccione tipo' name='tipod' required='true')
+        option(value='Consulado') Consulado
+        option(value='Embajada') Embajada
+        option(value='Coordinacion') Coordinacion
+
+    div.form-group
+      label(for='ubicacion') Ubicacion:
+      select#ubicacion.form-control(type='select' placeholder='Seleccione la ubicacion' name='ubicacion' required='true')
+        for ubicacion in ubicacion_list
+          if ubicacion
+            option(value=ubicacion._id selected=(ubicacion.toString()==ubicacion._id.toString() ? 'selected' : false)) #{ubicacion.ciudad}
+          else
+            option(value=ubicacion._id) #{ubicacion.ciudad}
+    div.form-group
+        label(for='loc[0]') Longitud:
+        input#longitud.form-control(type='text', name='longitud', value=(undefined===dependencia ? '' : dependencia.loc[0]) )
+        label(for='loc[1]') Latitud:
+        input#latitud.form-control(type='text', name='latitud' value=(undefined===dependencia ? '' : dependencia.loc[1]) )   
+   
+    button.btn.btn-primary(type='submit') Graba
+  if errors 
+     ul
+      for error in errors
+        li!= error.msg

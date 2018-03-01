@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h1 #{"Persona"}: #{persona.nomper}
+  p= persona.lifespan
+  
+  if persona_registroinstances.length
+  
+    p #[strong Debe eliminar las siguientes transacciones ante sde eliminar esta persona.]
+  
+    div(style='margin-left:20px;margin-top:20px')
+
+      h4 Transacciones
+    
+      dl
+      each persona in persona_registroinstances
+        dt 
+          a(href=persona.url) #{persona.nrotra}
+        dd #{persona.fecha} #{persona.valor}
+  else
+    p Seguro que desea eliminar esta persona?
+    
+    form(method='POST' action='')
+      div.form-group
+        input#personaid.form-control(type='hidden',name='personaid', required='true', value=persona._id )
+
+      button.btn.btn-primary(type='submit') Eliminar

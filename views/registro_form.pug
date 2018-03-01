@@ -1,0 +1,55 @@
+extends layout
+
+block content
+  h1=title
+  form(method='POST' action='')
+    div.form-group
+      label(for='nrotra') Nro Transaccion:
+      input#nrotra.form-control(type='number' placeholder='Nro' name='nrotra' required='true' value=(undefined===registro ? '' : registro.nrotra))
+    div.form-group
+      label(for='actuacion') Actuacion:
+      select#actuacion.form-control(type='select' placeholder='Tipo Actuacion' name='actuacion' required='true')
+        for actuacion in actuacion_list
+          if actuacion
+            option(value=actuacion._id selected=(actuacion.toString()==actuacion._id.toString() ? 'selected' : false)) #{actuacion.descripcion}
+          else
+            option(value=actuacion._id) #{actuacion.descripcion}
+    div.form-group
+      label(for='persona') Persona:
+      select#persona.form-control(type='select' placeholder='Seleccione la persona' name='persona' required='true')
+        for persona in persona_list
+          if persona
+            option(value=persona._id selected=(persona.toString()==persona._id.toString() ? 'selected' : false)) #{persona.nomper}
+          else
+           option(value=persona._id) #{ubicacion.nomper}
+    div.form-group
+      label(for='dependencia') Dependencia:
+      select#dependencia.form-control(type='select' placeholder='Seleccione la dependencia' name='dependencia' required='true')
+        for dependencia in dependencia_list
+          if dependencia
+            option(value=dependencia._id selected=(dependencia.toString()==dependencia._id.toString() ? 'selected' : false)) #{dependencia.nombre}
+          else
+            option(value=dependencia._id) #{dependencia.nombre}
+    div.form-group
+      label(for='fecha') Fecha:
+      input#fecha.form-control(type='date', name='fecha', value=(undefined===registro ? '' : registro.fecha) )
+      label(for='valor') Valor:
+      input#valor.form-control(type='number' placeholder='valor' name='valor' required='true' value=(undefined===registro ? '' : registro.valor))
+    div.form-group
+      label(for='estado') Estado:
+      select#estado.form-control(type='select' placeholder='Seleccione estado' name='estado' required='true')
+        option(value='Finalizado') Finalizado
+        option(value='Entregado') Entregado
+        option(value='Asignado Especies') Asignado Especies
+        option(value='Pagado') Pagado
+        option(value='Anulado') Anulado
+        option(value='Por Pagar') Por Pagar
+        option(value='Ingresado') Ingresado
+        option(value='Sin Costo') Sin Costo
+        option(value='Por Pagar') Por Pagar
+        option(value='Otros') Otros
+    button.btn.btn-primary(type='submit') Graba
+    if errors 
+     ul
+      for error in errors
+        li!= error.msg
