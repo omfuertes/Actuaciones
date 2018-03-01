@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+path {
+  stroke: white;
+  stroke-width: 0.25px;
+  fill: grey;
+}
+#mapaChart {    
+	position:absolute;
+	top:100px;
+	left:10px;
+	width:900px;
+	height: 500px; 
+}
+
+#lineChart {    
+	position:absolute;
+	top:600px;
+	left:10px;
+	height: 600px;
+}
+
+#pieChart {
+	position:absolute;
+	top:120px;
+	left:950px;
+	height: 250px;
+}
+
+#Titulo {
+	position:absolute;
+	top:5px;
+	left:650px;
+	height: 90px;
+}
+
+.slice {
+   font-size: 12pt;
+   font-family: Verdana;
+  fill: white; //svg specific - instead of color
+   font-weight: bold;	
+  		} 
+		
+.line {
+  fill: none;
+  stroke: #ff9333 ;
+  stroke-width: 1.5px;
+}
+
+.area {
+  fill: #e7e7e7;
+}
+
+
+
+</style>
+<html>
+
+<head>
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <script src="https://d3js.org/topojson.v1.min.js"></script>
+  <script src="https://d3js.org/d3-queue.v1.min.js"></script>
+</head>
+
+<body>
+<div id="mapaChart"></div>
+<div id="Titulo"></div>
+<div id="lineChart"></div>
+<div id="pieChart"></div>
+  <script>
+  function mapa(){
+    var width = 900,
+      height = 500;
+
+    var color = d3.scale.threshold()
+      //.domain([0, 20, 40, 60, 80])
+       .domain([3500,6500,9000,17200,88000,140000,3900000])
+      .range(["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1", "#54278f", "#844f8e", "#632f6d" ,"#541f5e" ,"#59184b" ,"#510d43" ,"#602b44" ,"#77234b", "#960a4d" ,"#c40762" , "#8e041d"])
+	   //.domain([35399,70782,106165,398064,497576 ])
+	   .range(["#d1baef", "#ac76f2", "#8d4ee0", "#702acc", "#756bb1", "#54278f","#3d2972"]);
+
+    var projection = d3.geo.mercator()
+      .scale((width - 3) / (2 * Math.PI))
+      .translate([width / 2, (height / 2)+50]);
+
+    var path = d3.geo.path()
+      .projection(projection);
+
+	
+	
+    var svg = d3.select("#mapaChart").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+	  
+    queue()
+      .defer(d3.json, "resource/world.json")
+      .defer(d3.csv, "resource/PaisesT.csv")
+      .await(ready);
+
+	var g = svg.append("g");  
+    function ready(error, world, species) {
+      if (error) throw error;
+
+    //  console.log(world)
+
+      var rateById = {};
+
+      species.forEach(function(d) {
+        rateById[d.ISO_3DIGIT] = +d.Species;
+      });
+
+    //  console.log(rateById);
+
+      svg.append("g")
+        .attr("class", "countries")
+        .selectAll("path")
+        .data(world.features)
+        .enter().append("path")
+        .attr("d", path)
+		 .style("fill", function(d) {
+          return color(rateById[d.id]);
+        })
+		.on("mouseover",function(d,i) { 
+		  d3.select(this)
+		  .transition()
+		  .duration(100)
+		  .style('fill','#FE642E');
+		  
+          svg.append("text")
+		   .attr("x",width/2)
+		   .attr("y", height-30)
+		   .attr("id","consu")
+		   .attr("class","borra")
+			.attr('fill',"#FE642E")
+             .text(d.id+": "+rateById[d.id])
+			 .style("font-family", "Verdana")
+             .style("font-size", "20px")	;})
+		
+		.on("mouseout",function(d,i) {
+			d3.select(this)
+			.transition()
+			.duration(100)
+			.style("fill", function(d) {
+               return color(rateById[d.id])});
+		
+		    svg.selectAll("#consu.borra").text("");
+		})
+		.on("click",function(d,i) {	
+		svg.append("text")
+		   .attr("x",width/4)
+		   .attr("y", 100)
+		   	.attr('fill',"#FE642E")
+            // .text( d.id);
+		lineas("resource/"+d.id+".csv")
+		dsActualizaPieChart(d.id)
+		;
+		});
+       
+		
+    }
+	
+	var zoom = d3.behavior.zoom()
+    .on("zoom",function() {
+        g.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+        g.selectAll("countries")
+            .attr("d", path.projection(projection));
+        g.selectAll("path")  
+            .attr("d", path.projection(projection)); 
+  });
+  }
+  
+  mapa();
+  
+ function lineas(datos){
+ var margin = {top: 8, right: 10, bottom: 2, left: 10},
+    width = 210 - margin.left - margin.right,
+    height = 70 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%b %Y").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var area = d3.svg.area()
+    .x(function(d) { return x(d.date); })
+    .y0(height)
+    .y1(function(d) { return y(d.price); });
+
+var line = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.price); });
+
+
+
+d3.csv(datos, type, function(error, data) {
+  
+  d3.selectAll("#graficos").remove();
+  /*data.filter(function(row) {
+        return row['country'] == 'USA';
+  */
+  // Nest data by symbol.
+  var symbols = d3.nest()
+      .key(function(d) { return d.symbol; })
+      .entries(data);
+
+  // Compute the maximum price per symbol, needed for the y-domain.
+  symbols.forEach(function(s) {
+ //   s.maxPrice = d3.max(s.values, function(d) { return d.price; });
+    s.maxPrice = d3.max(s.values, function(d) { return d.price; });
+  });
+
+  // Compute the minimum and maximum date across symbols.
+  // We assume values are sorted by date.
+  x.domain([
+    d3.min(symbols, function(s) { return s.values[0].date; }),
+	d3.max(symbols, function(s) { return s.values[s.values.length - 1].date; })
+    //d3.max(symbols, function(s) { return s.values[s.values.length - 1].date; })
+  ]);
+
+  // Add an SVG element for each symbol, with the desired dimensions and margin.
+  var svg = d3.select("#lineChart").selectAll("svg")
+      .data(symbols)
+    .enter().append("svg")
+	  .attr("id","graficos")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  // Add the area path elements. Note: the y-domain is set per element.
+  svg.append("path")
+      .attr("class", "area")
+      .attr("d", function(d) { y.domain([0, d.maxPrice]); return area(d.values); });
+
+  // Add the line path elements. Note: the y-domain is set per element.
+  svg.append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { y.domain([0, d.maxPrice]); return line(d.values); })
+	  ;
+
+  // Add a small label for the symbol name.
+  svg.append("text")
+      .attr("x", width - 6)
+      .attr("y", height - 6)
+      .style("text-anchor", "end")
+	  .style("font","Arial")
+	  .style("font-size","7px")
+      .text(function(d) { return d.key; });
+	  
+});
+
+function type(d) {
+  d.price = +d.price;
+  d.date = parseDate(d.date);
+  return d;
+}
+}
+lineas("ECU.csv");
+
+
+function dsPieChart(group){
+
+    var formatAsPercentage = d3.format("%"),
+		formatAsPercentage1Dec = d3.format(".1%");
+	
+ 
+	
+d3.csv('resource/DatGen2.csv', function(error, dataset) {  
+  dataset.forEach(function(d) {                   
+    d.measure = +d.measure;                           
+  });
+    
+//console.log(dataset[0]);
+//console.log(group);
+	function Selecciona(group) {
+	var ds = [];
+	for (x in dataset) {
+	     // console.log(dataset[x].pais);
+		 if(dataset[x].pais == group){
+		  //  console.log("Hola");
+		 	ds.push(dataset[x]);
+			
+		 } 
+		}
+	//console.log(ds[0]);	
+	return ds;
+}
+   // console.log(dataset);
+	var ds1= Selecciona(group); 
+	
+	var 	width = 400,
+		   height = 400,
+		   outerRadius = Math.min(width, height) / 2,
+		   innerRadius = outerRadius * .999,   
+		   // animación
+		   innerRadiusFinal = outerRadius * .5,
+		   innerRadiusFinal3 = outerRadius* .45,
+		   color = d3.scale.category20()    //gama de colores
+		   ;
+	    
+		
+		
+	var vis = d3.select("#pieChart")
+	     .append("svg:svg")              //crea el SVG dentro de <body>
+	     .data([ds1])                   
+	         .attr("width", width)          
+	         .attr("height", height)
+	     		.append("svg:g")                //grupo para poner la tarta
+	         .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")") 
+				;
+	
+
+			 
+   var arc = d3.svg.arc()              //crea los elementos <path> para los arcos de los datos
+        	.outerRadius(outerRadius).innerRadius(innerRadius);
+   
+   // para la animación
+   
+   
+   var arcFinal = d3.svg.arc().innerRadius(innerRadiusFinal).outerRadius(outerRadius);
+	var arcFinal3 = d3.svg.arc().innerRadius(innerRadiusFinal3).outerRadius(outerRadius);
+
+   var pie = d3.layout.pie()  
+        .value(function(d) { return d.measure; });    
+
+   var arcs = vis.selectAll("g.slice")     
+        .data(pie)                          
+        .enter()                           
+            .append("svg:g")               
+               .attr("class", "slice")    
+               .on("mouseover", mouseover)
+    				.on("mouseout", mouseout)
+    		
+    				;
+    				
+        arcs.append("svg:path")
+               .style("fill", function(d, i) { return color(i); } ) 
+               .attr("d", arc)     
+					.append("svg:title") 
+				   .text(function(d) { return d.data.category + ": " + formatAsPercentage(d.data.measure); });			
+
+        d3.selectAll("g.slice").selectAll("path").transition()
+			    .duration(750)
+			    .delay(10)
+			    .attr("d", arcFinal )
+			    ;
+	
+	  // Añade una etiqueda a los arcos mayores, las traslada al centroide y las rota
+	  // fuente: http://bl.ocks.org/1305337#index.html
+	  arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; })
+	  		.append("svg:text")
+	      .attr("dy", ".35em")
+	      .attr("text-anchor", "middle")
+	      .attr("transform", function(d) { return "translate(" + arcFinal.centroid(d) + ")rotate(" + angle(d) + ")"; })
+	      .text(function(d) { return formatAsPercentage(d.value); })
+	      .text(function(d) { return d.data.category; })
+	      ;
+	   
+	   // Calcula le angulo para la etiqueta convirtiendo de radianes a grados
+		function angle(d) {
+		    var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+		    return a > 90 ? a - 180 : a;
+		}
+		    
+		
+     	vis.append("svg:text")
+	      .attr("dy", ".35em")
+	      .attr("text-anchor", "middle")
+		 .style("font-family","Verdana")
+		  .style("font-size"  , "15px")
+		  .style("fill", "grey")
+		  .text("Género");		 
+
+		
+	function mouseover() {
+	  d3.select(this).select("path").transition()
+	      .duration(750)
+	        		.attr("d", arcFinal3)
+	        		;
+	}
+	
+	function mouseout() {
+	  d3.select(this).select("path").transition()
+	      .duration(750)
+	        		.attr("d", arcFinal)
+	        		;
+	}
+	
+	
+	
+	  });  
+
+}
+
+function dsActualizaPieChart(group){
+
+  var formatAsPercentage = d3.format("%"),
+		formatAsPercentage1Dec = d3.format(".1%");
+	
+  var despai1 = "";
+ 	
+  d3.csv('resource/DatGen2.csv', function(error, dataset) {  
+    dataset.forEach(function(d) {                   
+      d.measure = +d.measure;                           
+  });
+    
+
+  function Selecciona(group) {
+	var ds = [];
+	for (x in dataset) {
+		 if(dataset[x].pais == group){
+		 	ds.push(dataset[x]);
+			despai1 = dataset[x].despai;
+			
+		 } 
+		}
+	return ds;
+}
+   
+   var ds1= Selecciona(group); 
+   
+    // d3.selectAll("#Titulo").remove();
+    cambiaTitulo(despai1);
+	
+	var 	width = 400,
+		   height = 400,
+		   outerRadius = Math.min(width, height) / 2,
+		   innerRadius = outerRadius * .999,   
+		   // animación
+		   innerRadiusFinal = outerRadius * .5,
+		   innerRadiusFinal3 = outerRadius* .45,
+		   color = d3.scale.category20()    //gama de colores
+		   ;
+	    
+	var vis = d3.select("#pieChart svg")
+	     .append("svg:svg")              //crea el SVG dentro de <body>
+	     .data([ds1])                   
+	         .attr("width", width)          
+	         .attr("height", height)
+	     		.append("svg:g")                //grupo para poner la tarta
+	         .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")") 
+				;
+				
+   var arc = d3.svg.arc()              //crea los elementos <path> para los arcos de los datos
+        	.outerRadius(outerRadius).innerRadius(innerRadius);
+   
+   // para la animación
+   var arcFinal = d3.svg.arc().innerRadius(innerRadiusFinal).outerRadius(outerRadius);
+	var arcFinal3 = d3.svg.arc().innerRadius(innerRadiusFinal3).outerRadius(outerRadius);
+
+   var pie = d3.layout.pie()  
+        .value(function(d) { return d.measure; });    
+
+   var arcs = vis.selectAll("g.slice")     
+        .data(pie)                          
+        .enter()                           
+            .append("svg:g")               
+               .attr("class", "slice")    
+               .on("mouseover", mouseover)
+    				.on("mouseout", mouseout)
+    		
+    				;
+    				
+        arcs.append("svg:path")
+               .style("fill", function(d, i) { return color(i); } ) 
+               .attr("d", arc)     
+					.append("svg:title") 
+				   .text(function(d) { return d.data.category + ": " + formatAsPercentage(d.data.measure); });			
+
+        d3.selectAll("g.slice").selectAll("path")
+		        .transition()
+			    .duration(750)
+			    .delay(10)
+			    .attr("d", arcFinal )
+			    ;
+	
+	  // Añade una etiqueda a los arcos mayores, las traslada al centroide y las rota
+	  // fuente: http://bl.ocks.org/1305337#index.html
+	  arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; })
+	  	   .append("svg:text")
+	      .attr("dy", ".35em")
+		  .transition()
+			    .duration(750)
+			    .delay(10)
+
+	      .attr("text-anchor", "middle")
+	      .attr("transform", function(d) { return "translate(" + arcFinal.centroid(d) + ")rotate(" + angle(d) + ")"; })
+	      .text(function(d) { return formatAsPercentage(d.value); })
+	      .text(function(d) { return d.data.category; })
+	      ;
+	   
+	   // Calcula le angulo para la etiqueta convirtiendo de radianes a grados
+		function angle(d) {
+		    var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+		    return a > 90 ? a - 180 : a;
+		}
+		    
+		
+    
+
+
+		
+	function mouseover() {
+	  d3.select(this).select("path").transition()
+	      .duration(750)
+	        		.attr("d", arcFinal3)
+	        		;
+	}
+	
+	function mouseout() {
+	  d3.select(this).select("path").transition()
+	      .duration(750)
+	        		.attr("d", arcFinal)
+	        		;
+	}
+	
+	  });  
+
+
+}
+
+dsPieChart("resource/ECU");
+
+function Titulo(group)
+{
+
+   
+   var svg = d3.select("#Titulo").append("svg")
+      .attr("width", 400)
+      .attr("height", 90);
+	  
+	svg.append("text")
+		.style("font-family","Verdana")
+		.style("font-size"  , "40px")
+		.style("fill", "grey")
+		.attr("id","Tconsu")
+		.attr("class","Tborra")
+		.text(group)
+		.attr("x",10)
+		.attr("y", 50)
+		;
+		
+}
+
+Titulo("Ecuador");
+
+function cambiaTitulo(group)
+{
+  
+    var svg = d3.select("#Titulo");  
+	svg.selectAll("#Tconsu.Tborra").text(group);
+	
+}
+
+
+  </script>
+</body>
+
+</html>

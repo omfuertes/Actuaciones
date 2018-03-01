@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+path {
+  stroke: white;
+  stroke-width: 0.25px;
+  fill: #D8D8D8	;
+}
+
+#line2 {
+	position:absolute;
+	top:10px;
+	left:1010px;
+	height: 250px;
+	stroke: grey;
+	stroke-width: 4px;
+}
+
+#mapaChart {    
+	position:absolute;
+	top:90px;
+	left:10px;
+	width:1000px;
+	height: 500px; 
+}
+
+#lineChart {    
+	position:absolute;
+	top:50px;
+	left:1010px;
+	height: 300px;
+}
+
+#barChart {
+	position:absolute;
+	top:360px;
+	left:1010px;
+	height: 350px;
+}
+
+/*for line chart*/
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges; //The shape-rendering property is an SVG attribute, used here to make sure our axis and its tick mark lines are pixel-perfect. 
+}
+
+.line {
+  fill: none;
+  /*stroke: steelblue;*/
+  stroke: #FFBF00
+  stroke-width: 3px;
+}
+
+.dot {
+  /*fill: white;*/
+  /*stroke: steelblue;*/
+  stroke-width: 1.5px;
+  }
+	
+
+.axis text {
+    font-family: Verdana;
+    font-size: 11px;
+}
+
+.title {
+	 font-family: Verdana;
+    font-size: 15px;	
+		
+}
+
+	.xAxis {
+    font-family: verdana;
+    font-size: 11px;
+    fill: black;
+	}  
+
+	.yAxis {
+    font-family: verdana;
+    font-size: 11px;
+    fill: white;
+	}
+
+  
+table {
+	border-collapse:collapse;
+	border: 0px;	
+	font-family: Verdana;	
+	color: #5C5558;
+	font-size: 12px;
+	text-align: right;			
+}
+
+td {
+	padding-left: 10px;		
+}
+	
+#lineChartTitle1 {
+	font-family: Verdana;
+	font-size  : 13px;
+	fill       : #BDBDBD;
+	stroke     : #BDBDBD;
+	font-weight: bold;
+	text-anchor: middle;
+}
+
+#lineChartTitle2 {
+	font-family: Verdana;
+	font-size  : 120px;
+	fill       : steelblue;
+	text-anchor: middle;
+	font-weight: bold;
+	/*font-style: italic;*/
+}
+</style>
+<body>
+<div id="mapaChart"></div>
+<div id="lineChart"></div>
+<div id="barChart"></div> 
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v0.min.js"></script>
+<script>
+function mapa(){
+var width = 1000,
+    height = 500;
+
+var projection = d3.geo.mercator()
+    .center([0, 25])
+    .scale(150)
+    .rotate([0,0]);
+
+var svg = d3.select("#mapaChart").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var g = svg.append("g");
+
+// load and display the World
+d3.json("resource/world-110m2.json", function(error, topology) {
+
+// load and display the cities
+d3.csv("resource/dependen.csv", function(error, data) {
+    g.selectAll("circle")
+       .data(data)
+       .enter()
+	   //.on("mouseover", function(d) { return (d.Nombre;) })
+      /* .append("a")
+				  .attr("xlink:href", function(d) {
+					  return "https://www.google.com/search?q="+d.Nombre;}
+				  )*/
+				  
+       .append("circle")
+       .attr("cx", function(d) {
+               return projection([d.lon, d.lat])[0];
+       })
+       .attr("cy", function(d) {
+               return projection([d.lon, d.lat])[1];
+       })
+       .attr("r", 3)
+	   .attr("fill",'blue')
+	   //.style("fill", "blue")
+	   .on("mouseover",function(d,i) { 
+            d3.select(this)
+				.transition()
+				.duration(100)
+				.attr('r', 5)
+				.attr('fill', '#FE642E');
+				
+			    svg.append("text")
+			    .attr("x",width/4)
+				.attr("y", 30)
+				.attr("id","consu")
+				.attr("class","borra")
+				.attr('fill',"#FE642E")
+              	.text( d.Nombre);		 
+            }
+			)
+		.on("mouseout",function(d,i) { 
+            d3.select(this)
+				.transition()
+				.duration(100)
+				.attr('r', 3)
+				.attr('fill', 'blue');
+				
+			    svg.selectAll("#consu.borra")
+			           	.text("");	
+					
+				
+            }
+			)
+		.on("click",Actualiza)	
+			
+		
+});
+
+
+g.selectAll("path")
+      .data(topojson.object(topology, topology.objects.countries)
+          .geometries)
+    .enter()
+      .append("path")
+      .attr("d", path)
+});
+
+// zoom and pan
+var zoom = d3.behavior.zoom()
+    .on("zoom",function() {
+        g.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+        g.selectAll("circle")
+            .attr("d", path.projection(projection));
+        g.selectAll("path")  
+            .attr("d", path.projection(projection)); 
+
+  });
+
+function Actualiza(d, i) {
+				ActualizaBar(d.Nombre, "#088A4B");
+				ActualizaLine(d.Nombre, "#FFBF00");
+	} 
+svg.call(zoom)
+} // fin mapa
+mapa();
+
+/* LINEAS */
+var datasetLineChart = [
+
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2010, measure : 0},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2011, measure : 0},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2012, measure : 0},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2013, measure : 0},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2014, measure : 0},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2015, measure : 138},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2016, measure : 198},
+{ group: "CONSULADO AD-HONOREM DEL ECUADOR EN BOSTON", category: 2017, measure : 165},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2010, measure : 0},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2011, measure : 0},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2012, measure : 132},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2013, measure : 969},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2014, measure : 512},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2015, measure : 674},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2016, measure : 458},
+{ group: "CONSULADO DEL ECUADOR EN BRUSELAS", category: 2017, measure : 582},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2010, measure : 0},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2011, measure : 0},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2012, measure : 0},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2013, measure : 590},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2014, measure : 246},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2015, measure : 522},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2016, measure : 433},
+{ group: "CONSULADO DEL ECUADOR EN LA HAYA", category: 2017, measure : 426},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2012, measure : 723},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2013, measure : 4275},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2014, measure : 4012},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2015, measure : 4367},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2016, measure : 5928},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN BARCELONA", category: 2017, measure : 5576},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2012, measure : 20},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2013, measure : 180},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2014, measure : 52},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2015, measure : 6},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2016, measure : 4},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CALI", category: 2017, measure : 1},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2012, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2013, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN CHICAGO EEUU", category: 2017, measure : 1},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2012, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2013, measure : 67},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN GUADALAJARA - MEXICO", category: 2017, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2012, measure : 63},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2013, measure : 971},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LAUSANNE", category: 2017, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2012, measure : 6},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2013, measure : 54},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN LISBOA", category: 2017, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2012, measure : 14972},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2013, measure : 14026},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2014, measure : 11537},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2015, measure : 11037},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2016, measure : 12719},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MADRID", category: 2017, measure : 12176},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2012, measure : 3908},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2013, measure : 7140},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2014, measure : 6681},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2015, measure : 7444},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2016, measure : 7269},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN MILAN", category: 2017, measure : 7519},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2012, measure : 4291},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2013, measure : 13603},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2014, measure : 14412},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2015, measure : 19128},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2016, measure : 16159},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW JERSEY", category: 2017, measure : 17694},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2012, measure : 13},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2013, measure : 125},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW ORLEANS", category: 2017, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2012, measure : 3972},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2013, measure : 12487},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2014, measure : 14635},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2015, measure : 15011},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2016, measure : 15835},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN NEW YORK", category: 2017, measure : 17382},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2012, measure : 16},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2013, measure : 189},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN PIURA", category: 2017, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2012, measure : 68},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2013, measure : 868},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SAN FRANCISCO", category: 2017, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2010, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2011, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2012, measure : 26},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2013, measure : 318},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2014, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2015, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2016, measure : 0},
+{ group: "CONSULADO GENERAL DEL ECUADOR EN SIDNEY", category: 2017, measure : 0},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2010, measure : 0},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2011, measure : 1079},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2012, measure : 12270},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2013, measure : 15081},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2014, measure : 14453},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2015, measure : 19805},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2016, measure : 19142},
+{ group: "COORDINACION  ZONAL 7 - MACHALA", category: 2017, measure : 22155},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2014, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2015, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2016, measure : 2070},
+{ group: "COORDINACION ZONAL 1 - OFICINA ESMERALDAS", category: 2017, measure : 4456},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2014, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2015, measure : 1700},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2016, measure : 3919},
+{ group: "COORDINACION ZONAL 1 - OFICINA IBARRA", category: 2017, measure : 5689},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2014, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2015, measure : 0},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2016, measure : 1414},
+{ group: "COORDINACION ZONAL 1 - OFICINA LAGO AGRIO", category: 2017, measure : 755},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2011, measure : 166},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2012, measure : 403},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2013, measure : 884},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2014, measure : 2741},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2015, measure : 9466},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2016, measure : 5386},
+{ group: "COORDINACION ZONAL 1 - TULCAN", category: 2017, measure : 6423},
+{ group: "COORDINACION ZONAL 2", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 2", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL 2", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL 2", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL 2", category: 2014, measure : 0},
+{ group: "COORDINACION ZONAL 2", category: 2015, measure : 426},
+{ group: "COORDINACION ZONAL 2", category: 2016, measure : 1092},
+{ group: "COORDINACION ZONAL 2", category: 2017, measure : 886},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2012, measure : 1360},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2013, measure : 6763},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2014, measure : 8299},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2015, measure : 12656},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2016, measure : 13012},
+{ group: "COORDINACION ZONAL 3 - AMBATO", category: 2017, measure : 16667},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2011, measure : 32531},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2012, measure : 30052},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2013, measure : 40323},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2014, measure : 30345},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2015, measure : 33037},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2016, measure : 20106},
+{ group: "COORDINACION ZONAL 4 MANTA ", category: 2017, measure : 23029},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2014, measure : 0},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2015, measure : 0},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2016, measure : 569},
+{ group: "COORDINACION ZONAL 5 - MILAGRO", category: 2017, measure : 13},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2011, measure : 24059},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2012, measure : 22466},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2013, measure : 27226},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2014, measure : 22283},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2015, measure : 33791},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2016, measure : 29137},
+{ group: "COORDINACION ZONAL 6 AZOGUES", category: 2017, measure : 24658},
+{ group: "COORDINACION ZONAL 8", category: 2010, measure : 15},
+{ group: "COORDINACION ZONAL 8", category: 2011, measure : 148074},
+{ group: "COORDINACION ZONAL 8", category: 2012, measure : 118920},
+{ group: "COORDINACION ZONAL 8", category: 2013, measure : 119855},
+{ group: "COORDINACION ZONAL 8", category: 2014, measure : 107262},
+{ group: "COORDINACION ZONAL 8", category: 2015, measure : 136490},
+{ group: "COORDINACION ZONAL 8", category: 2016, measure : 113376},
+{ group: "COORDINACION ZONAL 8", category: 2017, measure : 126472},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2014, measure : 3675},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2015, measure : 8684},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2016, measure : 9450},
+{ group: "COORDINACION ZONAL MACHALA - OFICINA DE SERVICIOS LOJA", category: 2017, measure : 11762},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2010, measure : 0},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2011, measure : 0},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2012, measure : 0},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2013, measure : 0},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2014, measure : 5340},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2015, measure : 8572},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2016, measure : 9634},
+{ group: "COORDINACION ZONAL MANTA - OFICINA DE SERVICIOS SANTO DOMINGO DE LOS TSACHILAS", category: 2017, measure : 10654},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2010, measure : 0},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2011, measure : 1},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2012, measure : 0},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2013, measure : 552},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2014, measure : 816},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2015, measure : 1818},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2016, measure : 1166},
+{ group: "DIRECCION DE CEREMONIAL Y PROTOCOLO", category: 2017, measure : 954},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2010, measure : 0},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2011, measure : 0},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2012, measure : 8535},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2013, measure : 14607},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2014, measure : 10309},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2015, measure : 19201},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2016, measure : 16527},
+{ group: "DIRECCION DE EXTRANJERIA - GUAYAQUIL", category: 2017, measure : 13615},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2010, measure : 0},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2011, measure : 0},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2012, measure : 24437},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2013, measure : 43099},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2014, measure : 42159},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2015, measure : 66319},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2016, measure : 51238},
+{ group: "DIRECCION DE EXTRANJERIA - QUITO", category: 2017, measure : 39532},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2010, measure : 0},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2011, measure : 1838},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2012, measure : 2169},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2013, measure : 3326},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2014, measure : 2183},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2015, measure : 1171},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2016, measure : 485},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - NATURALIZACIONES", category: 2017, measure : 652},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2010, measure : 64},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2011, measure : 24041},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2012, measure : 34309},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2013, measure : 44848},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2014, measure : 45989},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2015, measure : 72731},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2016, measure : 39812},
+{ group: "DIRECCION DE MIGRACION Y EXTRANJERIA - VISAS", category: 2017, measure : 40388},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2010, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2011, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2012, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2013, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2014, measure : 29},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2015, measure : 751},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2016, measure : 610},
+{ group: "EMBAJADA DEL ECUADOR EN ESTADOS UNIDOS", category: 2017, measure : 546},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2010, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2011, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2012, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2013, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2014, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2015, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2016, measure : 46},
+{ group: "EMBAJADA DEL ECUADOR EN ETIOPIA  SECCION CONSULAR", category: 2017, measure : 70},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2010, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2011, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2012, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2013, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2014, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2015, measure : 0},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2016, measure : 235},
+{ group: "EMBAJADA DEL ECUADOR EN NIGERIA - SECCION CONSULAR EN ABUJA", category: 2017, measure : 490},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2012, measure : 104},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2013, measure : 1004},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2014, measure : 1069},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2015, measure : 1075},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2016, measure : 1596},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ALICANTE", category: 2017, measure : 1566},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2013, measure : 9},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2014, measure : 8},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2015, measure : 6},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2016, measure : 6},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ANKARA", category: 2017, measure : 6},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2012, measure : 62},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2013, measure : 398},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2014, measure : 212},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2015, measure : 94},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2016, measure : 123},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ASUNCION", category: 2017, measure : 134},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2012, measure : 193},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2013, measure : 1160},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2014, measure : 389},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2015, measure : 606},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2016, measure : 645},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ATLANTA (GEORGIA)", category: 2017, measure : 780},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2011, measure : 1678},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2012, measure : 3628},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2013, measure : 10379},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2014, measure : 31},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2015, measure : 9518},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2016, measure : 4695},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BEIJING", category: 2017, measure : 6297},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2013, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2014, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2015, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2016, measure : 7},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BELARUS", category: 2017, measure : 9},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2012, measure : 15},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2013, measure : 876},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2014, measure : 137},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2015, measure : 855},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2016, measure : 510},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERLIN", category: 2017, measure : 320},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2012, measure : 23},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2013, measure : 709},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2014, measure : 684},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2015, measure : 913},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2016, measure : 716},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BERNA", category: 2017, measure : 647},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2013, measure : 1511},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2014, measure : 1902},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2015, measure : 2047},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2016, measure : 2184},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BOGOTA", category: 2017, measure : 1919},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2013, measure : 1222},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2014, measure : 585},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2015, measure : 1461},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2016, measure : 858},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BRASILIA D.F.", category: 2017, measure : 121},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2012, measure : 5},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2013, measure : 86},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2014, measure : 24},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2015, measure : 107},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2016, measure : 77},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUDAPEST", category: 2017, measure : 57},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2012, measure : 25},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2013, measure : 694},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2014, measure : 471},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2015, measure : 865},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2016, measure : 2007},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN BUENOS AIRES", category: 2017, measure : 1843},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2013, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2014, measure : 44},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2015, measure : 211},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2016, measure : 166},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANBERRA-AUSTRALIA", category: 2017, measure : 136},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2011, measure : 1027},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2012, measure : 1926},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2013, measure : 3652},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2014, measure : 47},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2015, measure : 4991},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2016, measure : 2464},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CANTON", category: 2017, measure : 1759},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2012, measure : 383},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2013, measure : 2156},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2014, measure : 1864},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2015, measure : 3830},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2016, measure : 2895},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CARACAS", category: 2017, measure : 2360},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2012, measure : 2288},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2013, measure : 5317},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2014, measure : 3079},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2015, measure : 4354},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2016, measure : 3607},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CHICAGO (ILLINOIS)", category: 2017, measure : 3775},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2013, measure : 479},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2014, measure : 502},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2015, measure : 549},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2016, measure : 578},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CIUDAD DE GUATEMALA", category: 2017, measure : 486},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2012, measure : 1275},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2013, measure : 4509},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2014, measure : 5330},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2015, measure : 10777},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2016, measure : 4628},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN CONNECTICUT", category: 2017, measure : 5207},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2012, measure : 16},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2013, measure : 247},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2014, measure : 61},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2015, measure : 153},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2016, measure : 115},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN DOHA", category: 2017, measure : 205},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2013, measure : 227},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2014, measure : 198},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2015, measure : 369},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2016, measure : 577},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN EL CAIRO", category: 2017, measure : 1041},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2012, measure : 21},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2013, measure : 332},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2014, measure : 104},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2015, measure : 256},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2016, measure : 207},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ESTOCOLMO", category: 2017, measure : 241},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2012, measure : 208},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2013, measure : 3395},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2014, measure : 3199},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2015, measure : 3328},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2016, measure : 3173},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN GENOVA", category: 2017, measure : 3571},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2013, measure : 497},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2014, measure : 257},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2015, measure : 543},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2016, measure : 464},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HAMBURGO", category: 2017, measure : 405},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2012, measure : 1710},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2013, measure : 1930},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2014, measure : 746},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2015, measure : 1080},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2016, measure : 1096},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN HOUSTON (TEXAS)", category: 2017, measure : 896},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2012, measure : 180},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2013, measure : 2225},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2014, measure : 2324},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2015, measure : 1679},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2016, measure : 1028},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN IPIALES", category: 2017, measure : 800},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2011, measure : 28},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2012, measure : 24},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2013, measure : 208},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2014, measure : 189},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2015, measure : 157},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2016, measure : 156},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN KUALA LUMPUR", category: 2017, measure : 149},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2012, measure : 20},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2013, measure : 11096},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2014, measure : 35949},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2015, measure : 22007},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2016, measure : 7662},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA HABANA", category: 2017, measure : 8287},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2012, measure : 36},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2013, measure : 1100},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2014, measure : 911},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2015, measure : 872},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2016, measure : 727},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LA PAZ", category: 2017, measure : 737},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2012, measure : 1341},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2013, measure : 1840},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2014, measure : 1323},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2015, measure : 1588},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2016, measure : 2129},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LIMA", category: 2017, measure : 1896},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2013, measure : 1096},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2014, measure : 1062},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2015, measure : 1399},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2016, measure : 1448},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LONDRES", category: 2017, measure : 1513},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2012, measure : 484},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2013, measure : 1971},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2014, measure : 1662},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2015, measure : 2627},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS ANGELES (CALIFORNIA)", category: 2016, measure : 2342},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN LOS A	NGELES (CALIFORNIA)", category: 2017, measure : 2209},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2012, measure : 73},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2013, measure : 673},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2014, measure : 566},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2015, measure : 419},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2016, measure : 679},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MALAGA", category: 2017, measure : 554},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2012, measure : 14},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2013, measure : 117},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2014, measure : 44},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2015, measure : 28},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2016, measure : 17},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MANAGUA", category: 2017, measure : 38},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2011, measure : 49},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2012, measure : 1329},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2013, measure : 1505},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2014, measure : 1520},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2015, measure : 1497},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2016, measure : 1077},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MEXICO D.F.", category: 2017, measure : 967},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2012, measure : 4426},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2013, measure : 5560},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2014, measure : 4611},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2015, measure : 4882},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2016, measure : 4787},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MIAMI (FLORIDA)", category: 2017, measure : 4552},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2012, measure : 200},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2013, measure : 2496},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2014, measure : 1869},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2015, measure : 2081},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2016, measure : 1798},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MINNEAPOLIS", category: 2017, measure : 1779},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2013, measure : 44},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2014, measure : 59},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2015, measure : 142},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2016, measure : 102},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTERREY", category: 2017, measure : 78},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2012, measure : 12},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2013, measure : 105},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2014, measure : 74},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2015, measure : 123},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2016, measure : 116},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTEVIDEO", category: 2017, measure : 142},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2012, measure : 51},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2013, measure : 870},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2014, measure : 317},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2015, measure : 829},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2016, measure : 686},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MONTREAL", category: 2017, measure : 781},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2012, measure : 22},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2013, measure : 525},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2014, measure : 203},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2015, measure : 502},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2016, measure : 441},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MOSCU", category: 2017, measure : 1018},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2013, measure : 3880},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2014, measure : 3422},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2015, measure : 2849},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2016, measure : 4039},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN MURCIA", category: 2017, measure : 4052},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2012, measure : 9},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2013, measure : 719},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2014, measure : 31},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2015, measure : 988},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2016, measure : 1894},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN NUEVA DELHI", category: 2017, measure : 1595},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2012, measure : 47},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2013, measure : 701},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2014, measure : 80},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2015, measure : 601},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2016, measure : 607},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN OTTAWA", category: 2017, measure : 539},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2012, measure : 182},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2013, measure : 609},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2014, measure : 492},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2015, measure : 302},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2016, measure : 461},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PALMA DE MALLORCA ISLAS BALEARES", category: 2017, measure : 364},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2012, measure : 175},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2013, measure : 1193},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2014, measure : 496},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2015, measure : 840},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2016, measure : 919},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PANAMA", category: 2017, measure : 793},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2012, measure : 78},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2013, measure : 1361},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2014, measure : 607},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2015, measure : 1503},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2016, measure : 1474},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PARIS", category: 2017, measure : 1382},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2012, measure : 106},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2013, measure : 572},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2014, measure : 73},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2015, measure : 224},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2016, measure : 207},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PHOENIX (ARIZONA)", category: 2017, measure : 184},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2013, measure : 69},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2014, measure : 7},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2015, measure : 212},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2016, measure : 232},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN PRETORIA", category: 2017, measure : 72},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2012, measure : 708},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2013, measure : 17650},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2014, measure : 17750},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2015, measure : 22118},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2016, measure : 17104},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN QUEENS", category: 2017, measure : 18637},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2013, measure : 455},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2014, measure : 527},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2015, measure : 929},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2016, measure : 626},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN RIO DE JANEIRO", category: 2017, measure : 361},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2012, measure : 206},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2013, measure : 2157},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2014, measure : 1900},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2015, measure : 2135},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2016, measure : 1998},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN ROMA", category: 2017, measure : 1858},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2012, measure : 16},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2013, measure : 316},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2014, measure : 323},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2015, measure : 354},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2016, measure : 336},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN JOSE", category: 2017, measure : 256},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2012, measure : 8},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2013, measure : 135},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2014, measure : 85},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2015, measure : 71},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2016, measure : 70},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SAN SALVADOR", category: 2017, measure : 125},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2013, measure : 7073},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2014, measure : 3952},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2015, measure : 6986},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2016, measure : 5590},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTIAGO", category: 2017, measure : 2507},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2012, measure : 28},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2013, measure : 144},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2014, measure : 104},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2015, measure : 145},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2016, measure : 134},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SANTO DOMINGO", category: 2017, measure : 187},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2012, measure : 123},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2013, measure : 830},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2014, measure : 67},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2015, measure : 474},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2016, measure : 286},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SEUL", category: 2017, measure : 154},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2010, measure : 3},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2011, measure : 272},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2012, measure : 429},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2013, measure : 1845},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2014, measure : 24},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2015, measure : 3445},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2016, measure : 1810},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SHANGHAI", category: 2017, measure : 2180},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2012, measure : 24},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2013, measure : 186},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2014, measure : 8},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2015, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2016, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN SINGAPUR", category: 2017, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2012, measure : 4},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2013, measure : 159},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2014, measure : 96},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2015, measure : 113},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2016, measure : 58},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEGUCIGALPA", category: 2017, measure : 57},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2013, measure : 119},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2014, measure : 3},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2015, measure : 246},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2016, measure : 328},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEHERAN", category: 2017, measure : 569},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2012, measure : 21},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2013, measure : 118},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2014, measure : 61},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2015, measure : 101},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2016, measure : 131},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TEL AVIV", category: 2017, measure : 129},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2012, measure : 37},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2013, measure : 356},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2014, measure : 70},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2015, measure : 420},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2016, measure : 273},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TOKIO", category: 2017, measure : 269},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2012, measure : 54},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2013, measure : 1788},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2014, measure : 1045},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2015, measure : 1772},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2016, measure : 1853},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TORONTO", category: 2017, measure : 2087},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2012, measure : 36},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2013, measure : 686},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2014, measure : 800},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2015, measure : 933},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2016, measure : 788},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN TUMBES", category: 2017, measure : 605},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2012, measure : 365},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2013, measure : 2128},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2014, measure : 1854},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2015, measure : 1437},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2016, measure : 1686},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA", category: 2017, measure : 1847},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2013, measure : 106},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2014, measure : 391},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2015, measure : 1219},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2016, measure : 787},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VALENCIA VENEZUELA", category: 2017, measure : 950},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2013, measure : 71},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2014, measure : 13},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2015, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2016, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VARSOVIA", category: 2017, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2012, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2013, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2014, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2015, measure : 195},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2016, measure : 210},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN VIENA", category: 2017, measure : 186},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2012, measure : 1092},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2013, measure : 2137},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2014, measure : 1061},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2015, measure : 2116},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2016, measure : 2080},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN WASHINGTON D.C.", category: 2017, measure : 1741},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2011, measure : 307},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2012, measure : 15},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2013, measure : 27},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2014, measure : 28},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2015, measure : 201},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2016, measure : 124},
+{ group: "OFICINA CONSULAR DEL ECUADOR EN YAKARTA", category: 2017, measure : 164},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2010, measure : 0},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2011, measure : 0},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2012, measure : 213},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2013, measure : 1936},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2014, measure : 787},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2015, measure : 2231},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2016, measure : 2291},
+{ group: "OFICINA CONSULAR GENERAL DEL ECUADOR EN SAO PAULO", category: 2017, measure : 1159},
+{ group: "Todos", category: 2010, measure : 83},
+{ group: "Todos", category: 2011, measure : 402276},
+{ group: "Todos", category: 2012, measure : 445936},
+{ group: "Todos", category: 2013, measure : 617124},
+{ group: "Todos", category: 2014, measure : 561171},
+{ group: "Todos", category: 2015, measure : 749605},
+{ group: "Todos", category: 2016, measure : 614421},
+{ group: "Todos", category: 2017, measure : 625248},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2010, measure : 1},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2011, measure : 135487},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2012, measure : 113546},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2013, measure : 104489},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2014, measure : 90542},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2015, measure : 109433},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2016, measure : 100797},
+{ group: "UNIDAD DE LEGALIZACIONES", category: 2017, measure : 100456},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2010, measure : 0},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2011, measure : 31639},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2012, measure : 25189},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2013, measure : 18463},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2014, measure : 12876},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2015, measure : 11247},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2016, measure : 9210},
+{ group: "UNIDAD DE LEGALIZACIONES - TURUBAMBA", category: 2017, measure : 9114},
+
+]
+;
+
+var group = "Todos";
+
+function datasetLineChartChosen(group) {
+	var ds = [];
+	for (x in datasetLineChart) {
+		 if(datasetLineChart[x].group==group){
+		 	ds.push(datasetLineChart[x]);
+		 } 
+		}
+	return ds;
+}
+
+function dsLineChartBasics() {
+
+	var margin = {top: 50, right: 10, bottom: 10, left: 50},
+	    width = 600 - margin.left - margin.right,
+	    height = 360 - margin.top - margin.bottom
+	    ;
+		
+		return {
+			margin : margin, 
+			width : width, 
+			height : height
+		}			
+		;
+}
+
+
+function dsLineChart() {
+
+
+
+	var firstDatasetLineChart = datasetLineChartChosen(group);    
+	
+	var basics = dsLineChartBasics();
+	
+	var margin = basics.margin,
+		width = basics.width,
+	   height = basics.height
+		;
+
+	var xScale = d3.scale.linear()
+	    .domain([0, firstDatasetLineChart.length-1])
+	    .range([0, width])
+	    ;
+
+	var yScale = d3.scale.linear()
+	    .domain([0, d3.max(firstDatasetLineChart, function(d) { return d.measure; })])
+	    .range([height, 0])
+	    ;
+	
+	var line = d3.svg.line()
+	    .x(function(d, i) { return xScale(i); })
+	    .y(function(d) { return yScale(d.measure); })
+	    ;
+	
+	var svg = d3.select("#lineChart").append("svg")
+	    .datum(firstDatasetLineChart)
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	    // crear un grupo y moverlo para que se conserven los mArgenes para los ejes y el tItulo
+	    
+	var plot = svg
+	    .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	    .attr("id", "lineChartPlot")
+	    ;
+
+		/* titulos descriptivos - inicio */
+	var dsLength=firstDatasetLineChart.length;
+
+	plot.append("text")
+		.text(firstDatasetLineChart[dsLength-1].measure)
+		.attr("id","lineChartTitle2")
+		.attr("x",width/2)
+		.attr("y",height/2)	
+		;
+	/* titulos descriptivos - fin */
+	    
+	plot.append("path")
+	    .attr("class", "line")
+	    .attr("d", line)
+		.attr("id","line2")	
+	    // add color
+	
+	    ;
+	  
+	plot.selectAll(".dot")
+	    .data(firstDatasetLineChart)
+	  	 .enter().append("circle")
+	    .attr("class", "dot")
+	    .attr("fill", "red" )
+	    .attr("cx", line.x())
+	    .attr("cy", line.y())
+	    .attr("r", 3.5)
+	   // .attr("stroke", "lightgrey")
+	   // .append("title")
+	   // .text(function(d) { return d.category + ": " + formatAsInteger(d.measure); })
+	    ;
+
+	plot.append("text")
+		.text("Total de Actuaciones por año")
+		.attr("class","titulos")
+		.attr("id","lineChartTitle1")	
+		.attr("x",margin.left + ((width + margin.right)/2)-50)
+		.attr("y", -20)
+		;
+
+}
+
+dsLineChart();
+
+
+ /* ** Actualizar el grafico ** */
+ 
+function ActualizaLine(group, colorChosen) {
+
+	var currentDatasetLineChart = datasetLineChartChosen(group);   
+
+	var basics = dsLineChartBasics();
+	
+	var margin = basics.margin,
+		width = basics.width,
+	   height = basics.height
+		;
+
+	var xScale = d3.scale.linear()
+	    .domain([0, currentDatasetLineChart.length-1])
+	    .range([0, width])
+	    ;
+
+	var yScale = d3.scale.linear()
+	    .domain([0, d3.max(currentDatasetLineChart, function(d) { return d.measure; })])
+	    .range([height, 0])
+	    ;
+	
+	var line = d3.svg.line()
+    .x(function(d, i) { return xScale(i); })
+    .y(function(d) { return yScale(d.measure); })
+    ;
+
+   var plot = d3.select("#lineChartPlot")
+   	.datum(currentDatasetLineChart)
+	   ;
+	   
+	/* titulos descriptivos - inicio */
+	var dsLength=currentDatasetLineChart.length;
+	
+	plot.select("text")
+		.text(currentDatasetLineChart[dsLength-1].measure)
+		;
+	/* titulos descriptivos -  fin */
+	   
+	plot
+	.select("path")
+		.transition()
+		.duration(750)			    
+	   .attr("class", "line")
+	   .attr("d", line)	
+	   //.attr("fill","#FFBF00")
+	   .attr("stroke", "#FFBF00")
+	   
+	   ;
+	   
+	var path = plot
+		.selectAll(".dot")
+	   .data(currentDatasetLineChart)
+	   .transition()
+		.duration(750)
+	   .attr("class", "dot")
+	   .attr("fill", colorChosen  )
+	   .attr("cx", line.x())
+	   .attr("cy", line.y())
+	   .attr("r", 3.5)
+	   // add color
+		//.attr("stroke", colorChosen)
+	   ;
+	  
+
+	plot.selectAll("#lineChartTitle1.titulos").text(group);
+		
+	  
+
+
+}
+
+/* FIN LINEAS */
+
+function dsBarChartBasics() {
+
+		var margin = {top: 30, right: 5, bottom: 20, left: 50},
+		width = 600 - margin.left - margin.right,
+	   height = 350 - margin.top - margin.bottom,
+		colorBar = d3.scale.category20(),
+		barPadding = 1
+		;
+		
+		return {
+			margin : margin, 
+			width : width, 
+			height : height, 
+			colorBar : colorBar, 
+			barPadding : barPadding
+		}			
+		;
+}
+
+
+function dsBarChart() {
+
+	var firstDatasetBarChart = datasetLineChartChosen(group);         	
+	
+	var basics = dsBarChartBasics();
+	
+	var margin = basics.margin,
+		width = basics.width,
+	   height = basics.height,
+		colorBar = basics.colorBar,
+		barPadding = basics.barPadding
+		;
+					
+	var 	xScale = d3.scale.linear()
+						.domain([0, firstDatasetBarChart.length])
+						.range([0, width])
+						;
+		  
+	var yScale = d3.scale.linear()
+		   .domain([0, d3.max(firstDatasetBarChart, function(d) { return d.measure; })])
+		   .range([height, 0])
+		   ;
+	
+	
+	var svg = d3.select("#barChart")
+			.append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+		    .attr("id","barChartPlot")
+		    ;
+	
+	var plot = svg
+		    .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+		    ;
+	            
+	plot.selectAll("rect")
+		   .data(firstDatasetBarChart)
+		   .enter()
+		   .append("rect")
+			.attr("x", function(d, i) {
+			    return xScale(i);
+			})
+		   .attr("width", width / firstDatasetBarChart.length - barPadding)   
+			.attr("y", function(d) {
+			    return yScale(d.measure);
+			})  
+			.attr("height", function(d) {
+			    return height-yScale(d.measure);
+			})
+			.attr("fill", "lightgrey")
+			;
+	
+		
+	plot.selectAll("text")
+	.data(firstDatasetBarChart)
+	.enter()
+	.append("text")
+	.text(	function(d) {
+			return (d3.round(d.measure));
+	}
+	)
+	.attr("text-anchor", "middle")
+	.attr("x", function(d, i) {
+			return (i * (width / firstDatasetBarChart.length)) + ((width / firstDatasetBarChart.length - barPadding) / 2);
+	})
+	.attr("y", function(d) {
+			return yScale(d.measure) + 20;
+	})
+	.attr("class", "yAxis")
+	;
+	
+
+	var xLabels = svg
+		    .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + (margin.top + height)  + ")")
+		    ;
+	
+	xLabels.selectAll("text.xAxis")
+		  .data(firstDatasetBarChart)
+		  .enter()
+		  .append("text")
+		  .text(function(d) { return d.category;})
+		  .attr("text-anchor", "middle")
+			// posicion x a partir del borde izquierdo mAs la mitad de la anchura de la barra
+						   .attr("x", function(d, i) {
+						   		return (i * (width / firstDatasetBarChart.length)) + ((width / firstDatasetBarChart.length - barPadding) / 2);
+						   })
+		  .attr("y", 15)
+		  .attr("class", "xAxis")
+		  ;			
+	 
+	
+	
+}
+
+function  ActualizaBar(group, colorChosen) {
+
+	var currentDatasetBarChart = datasetLineChartChosen(group);
+		
+		var basics = dsBarChartBasics();
+	
+		var margin = basics.margin,
+			width = basics.width,
+		   height = basics.height,
+			colorBar = basics.colorBar,
+			barPadding = basics.barPadding
+			;
+		
+		var 	xScale = d3.scale.linear()
+			.domain([0, currentDatasetBarChart.length])
+			.range([0, width])
+			;
+		
+			
+		var yScale = d3.scale.linear()
+	      .domain([0, d3.max(currentDatasetBarChart, function(d) { return d.measure; })])
+	      .range([height,0])
+	      ;
+	      
+	   var svg = d3.select("#barChart svg");
+	      
+	   var plot = d3.select("#barChartPlot")
+	   	.datum(currentDatasetBarChart)
+		   ;
+	
+	  	plot.selectAll("rect")
+	      .data(currentDatasetBarChart)
+	      .transition()
+			.duration(750)
+			.attr("x", function(d, i) {
+			    return xScale(i);
+			})
+		   .attr("width", width / currentDatasetBarChart.length - barPadding)   
+			.attr("y", function(d) {
+			    return yScale(d.measure);
+			})  
+			.attr("height", function(d) {
+			    return height-yScale(d.measure);
+			})
+			.attr("fill", colorChosen)
+			;
+		
+		plot.selectAll("text.yAxis") 
+ 		    .data(currentDatasetBarChart)
+			.transition()
+			.duration(750)
+		   .attr("text-anchor", "middle")
+		   .attr("x", function(d, i) {
+		   		return (i * (width / currentDatasetBarChart.length)) + ((width / currentDatasetBarChart.length - barPadding) / 2);
+		   })
+		   .attr("y", function(d) {
+		   		return yScale(d.measure) + 20;
+		   })
+		   .text(function(d) {
+				return (d.measure);
+		   })
+		   .attr("class", "yAxis")					 
+		;
+		
+
+	
+
+}
+dsBarChart();
+
+</script>
+</body>
+</html>

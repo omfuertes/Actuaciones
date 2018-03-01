@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+path {
+  stroke: white;
+  stroke-width: 0.25px;
+  fill: #D8D8D8	;
+}
+
+
+
+#mapaChart {    
+	position:absolute;
+	top:90px;
+	left:10px;
+	width:900px;
+	height: 500px; 
+}
+
+
+#barChart {
+	position:absolute;
+	top:90px;
+	left:910px;
+	height: 800px;
+}
+
+
+.title {
+	 font-family: Verdana;
+    font-size: 15px;	
+		
+}
+
+
+#Titulo {
+	position:absolute;
+	top:5px;
+	left:300px;
+	height: 80px;
+}
+
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line, 
+.axis1 path,
+.axis1 line {
+  fill: none;
+  stroke: #E6E7E8;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path, .x.axis1 path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
+.legend-box {
+  cursor: pointer;  
+}
+
+#mouse-tracker {
+  stroke: #E6E7E8;
+  stroke-width: 1px;
+}
+
+.hover-line { 
+  stroke: #E6E7E8;
+  fill: none;
+  stroke-width: 1px;
+  left: 10px;
+  shape-rendering: crispEdges;
+  opacity: 1e-6;
+}
+
+.hover-text {
+  stroke: none;
+  font-size: 30px;
+  font-weight: bold;
+  fill: #000000;
+}
+
+.tooltip {
+  font-weight: normal;
+}
+
+.brush .extent {
+  stroke: #FFF;
+  shape-rendering: crispEdges;
+}
+
+	
+
+</style>
+<body>
+<div id="mapaChart"></div>
+<div id="barChart"></div> 
+<div id="Titulo"></div> 
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v0.min.js"></script>
+<script>
+function mapa(){
+var width = 900,
+    height = 500;
+
+var projection = d3.geo.mercator()
+    .center([0, 25])
+    .scale(150)
+    .rotate([0,0]);
+
+var svg = d3.select("#mapaChart").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var g = svg.append("g");
+
+// load and display the World
+d3.json("resource/world-110m2.json", function(error, topology) {
+
+// load and display the cities
+d3.csv("resource/dependen.csv", function(error, data) {
+    g.selectAll("circle")
+       .data(data)
+       .enter()
+	   //.on("mouseover", function(d) { return (d.Nombre;) })
+      /* .append("a")
+				  .attr("xlink:href", function(d) {
+					  return "https://www.google.com/search?q="+d.Nombre;}
+				  )*/
+				  
+       .append("circle")
+       .attr("cx", function(d) {
+               return projection([d.lon, d.lat])[0];
+       })
+       .attr("cy", function(d) {
+               return projection([d.lon, d.lat])[1];
+       })
+       .attr("r", 3)
+	   .attr("fill",'blue')
+	   //.style("fill", "blue")
+	   .on("mouseover",function(d,i) { 
+            d3.select(this)
+				.transition()
+				.duration(100)
+				.attr('r', 5)
+				.attr('fill', '#FE642E');
+				
+			    svg.append("text")
+			    .attr("x",width/4)
+				.attr("y", 30)
+				.attr("id","consu")
+				.attr("class","borra")
+				.attr('fill',"#FE642E")
+				.style("font-family", "Verdana")
+              	.text( d.Nombre);		 
+            }
+			)
+		.on("mouseout",function(d,i) { 
+            d3.select(this)
+				.transition()
+				.duration(100)
+				.attr('r', 3)
+				.attr('fill', 'blue');
+				
+			    svg.selectAll("#consu.borra")
+			           	.text("");	
+					
+				
+            }
+			)
+		.on("click",Actualiza)	
+			
+		
+});
+
+
+g.selectAll("path")
+      .data(topojson.object(topology, topology.objects.countries)
+          .geometries)
+    .enter()
+      .append("path")
+      .attr("d", path)
+});
+
+// zoom and pan
+var zoom = d3.behavior.zoom()
+    .on("zoom",function() {
+        g.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+        g.selectAll("circle")
+            .attr("d", path.projection(projection));
+        g.selectAll("path")  
+            .attr("d", path.projection(projection)); 
+
+  });
+
+function Actualiza(d, i) {
+				ActualizaLine(d.Nombre);
+				cambiaTitulo(d.Nombre);
+	} 
+svg.call(zoom)
+} // fin mapa
+mapa();
+
+function ActualizaLine(dependencia){
+var margin = {top: 20, right: 200, bottom: 100, left: 50},
+    margin2 = { top: 430, right: 10, bottom: 20, left: 40 },
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom,
+    height2 = 500 - margin2.top - margin2.bottom;
+
+var parseDate = d3.time.format("%Y%m%d").parse;
+var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+
+var xScale = d3.time.scale()
+    .range([0, width]),
+
+    xScale2 = d3.time.scale()
+    .range([0, width]); // Duplicate xScale for brushing ref later
+
+var yScale = d3.scale.linear()
+    .range([height, 0]);
+
+
+d3.select("#barChart svg").remove();
+// Escala de colores
+var color= d3.scale.category20()
+
+
+// Ejes x principal y auxiliar
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom"),
+
+    xAxis2 = d3.svg.axis() 
+    .scale(xScale2)
+    .orient("bottom");    
+
+// Eje y	
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("left");  
+
+// Lienas esconde los valores 0
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d) { return xScale(d.date); })
+    .y(function(d) { return yScale(d.rating); })
+    .defined(function(d) { return d.rating; });  // Hiding line value defaults of 0 for missing data
+
+var maxY; 
+
+// Añado SVG
+var svg = d3.select("#barChart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom) 
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// recuadro de gráfico
+svg.append("rect")
+    .attr("width", width)
+    .attr("height", height)                                    
+    .attr("x", 0) 
+    .attr("y", 0)
+    .attr("id", "mouse-tracker")
+    .style("fill", "white"); 
+
+
+// Definicion de slider  
+var context = svg.append("g") 
+    .attr("transform", "translate(" + 0 + "," + 410 + ")")
+    .attr("class", "context");
+
+
+svg.append("defs")
+  .append("clipPath") 
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height); 
+
+var ds=[];
+
+ 
+
+d3.tsv("resource/Totales-consu.tsv", function(error, dataset) {
+   color.domain(d3.keys(dataset[0]).filter(function(key) { 
+    return (key !== "fecha") && (key !== "Consulado" ) ; 
+    }));
+	var  ds = [] ; 
+   var  dsa = ["APOSTILLA", "C_C_VISADO", "CANCELACION_VISA", "CENSO_MIGRATORIO", "DOC_VIAJE", "ESTADO_CIVIL", "LEGALIZACIONES", "NATURALIZACION", "NOTARIALES", "SOL_CANCELACION",  "SOL_VISA", "TRANS_VISA", "VISADO"];
+   //for (x in dataset){
+   dataset.forEach(function(d, i) {                   
+      if(d.Consulado== dependencia){  
+	     ds.push (
+		 {
+		   date : parseDate(d.fecha),
+		   APOSTILLA : +d.APOSTILLA,
+		   C_C_VISADO : +d["C_C_VISADO"],
+		   CANCELACION_VISA : +d["CANCELACION_VISA"],
+		   CENSO_MIGRATORIO: +d["CENSO_MIGRATORIO"],	
+		   DOC_VIAJE : +d["DOC_VIAJE"],	
+		   ESTADO_CIVIL : +d["ESTADO_CIVIL"],
+		   LEGALIZACIONES : +d["LEGALIZACIONES"],	
+		   NATURALIZACION : +d["NATURALIZACION"],	
+		   NOTARIALES : +d["NOTARIALES"],	
+		   SOL_CANCELACION: +d["SOL_CANCELACION"],	
+		   SOL_VISA: +d["SOL_VISA"],	
+		   TRANS_VISA: +d["TRANS_VISA"],
+		   VISADO: +d["VISADO"]
+		 }
+		 );
+ 
+		 
+	  }
+
+  })
+ 
+    /*color.domain(d3.keys(dsa[0]).filter(function(key) { 
+    return key !== ("date"); 
+    }));*/
+	
+//	color.domain(d3.keys("APOSTILLA", "C_C_VISADO", "CANCELACION_VISA", "CENSO_MIGRATORIO", "DOC_VIAJE", "ESTADO_CIVIL", "LEGALIZACIONES", "NATURALIZACION", "NOTARIALES", "SOL_CANCELACION",  "SOL_VISA", "TRANS_VISA", "VISADO"));
+	
+   var categories = color.domain().map(function(name) {
+
+    return {
+      name: name, // Nombres de las categorias 
+      values: ds.map(function(d) { // valores categorias
+        return {
+          date: d.date, 
+          rating: +(d[name]),
+          };
+      }),
+      visible: (name === "VISADO" ? true : false) // Grafico inicia con valor de apostilla marcado
+    };
+  });
+  
+ /////////////
+ // Valor y menor en un determinado punto
+  xScale.domain(d3.extent(ds, function(d) { return d.date; }));
+
+  // Escala y  segunda escala x
+  yScale.domain([0, 100]);
+  xScale2.domain(xScale.domain()); 
+ 
+
+// slider bajo el graficao
+ var brush = d3.svg.brush()
+    .x(xScale2) 
+    .on("brush", brushed);
+
+  //crea ejex2
+  context.append("g") 
+      .attr("class", "x axis1")
+      .attr("transform", "translate(0," + height2 + ")")
+      .call(xAxis2);
+
+  //atributos de brush
+  var contextArea = d3.svg.area() 
+    .interpolate("monotone")
+    .x(function(d) { return xScale2(d.date); }) // x de eslcal2
+    .y0(height2) 
+    .y1(0); 
+
+  //plot de la reata de grafico
+  context.append("path") 
+    .attr("class", "area")
+    .attr("d", contextArea(categories[0].values)) 
+    .attr("fill", "#F1F1F8");
+    
+  //añadir brus para seleccion y deseleccion
+  context.append("g")
+    .attr("class", "x brush")
+    .call(brush)
+    .selectAll("rect")
+    .attr("height", height2) // Make brush rects same height 
+      .attr("fill", "#E6E7E8");  
+
+
+  // dgraficado de líneas
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("x", -10)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("incidencias");
+
+  var issue = svg.selectAll(".issue")
+      .data(categories) 
+    .enter().append("g")
+      .attr("class", "issue");   
+
+  issue.append("path")
+      .attr("class", "line")
+      .style("pointer-events", "none") 
+      .attr("id", function(d) {
+        return "line-" + d.name.replace(" ", "").replace("/", ""); // ID de la linea y valores 
+      })
+      .attr("d", function(d) { 
+        return d.visible ? line(d.values) : null; // grafica la linea si el control esta prendido
+      })
+      .attr("clip-path", "url(#clip)")
+      .style("stroke", function(d) { return color(d.name); });
+
+  // draw legend
+  var legendSpace = 450 / categories.length; // 450/number of issues (ex. 40)    
+
+  issue.append("rect")
+      .attr("width", 10)
+      .attr("height", 10)                                    
+      .attr("x", width + (margin.right/3) - 15) 
+      .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace) - 8; })  // spacing
+      .attr("fill",function(d) {
+        return d.visible ? color(d.name) : "#F1F1F2"; // cambia el color gris para lineas no visibles
+      })
+      .attr("class", "legend-box")
+
+      .on("click", function(d){ // POne visible
+        d.visible = !d.visible; // lo apaga si esta prendido
+
+        maxY = findMaxY(categories); // Busca el valro máximo de Y para las categorias visibles 
+        yScale.domain([0,maxY]); // Setea el dominio de eje y  de acuerdo al valor mas alto o baja de las categorias visibles
+        svg.select(".y.axis")
+          .transition()
+          .call(yAxis);   
+
+        issue.select("path")
+          .transition()
+          .attr("d", function(d){
+            console.log(d.values);
+            return d.visible ? line(d.values) : null; // si es viible, grafica la linea
+          })
+
+        issue.select("rect")
+          .transition()
+          .attr("fill", function(d) {
+          return d.visible ? color(d.name) : "#F1F1F2";
+        });
+      })
+
+      .on("mouseover", function(d){
+
+        d3.select(this)
+          .transition()
+          .attr("fill", function(d) { return color(d.name); });
+
+        d3.select("#line-" + d.name.replace(" ", "").replace("/", ""))
+          .transition()
+          .style("stroke-width", 2.5);  
+      })
+
+      .on("mouseout", function(d){
+
+        d3.select(this)
+          .transition()
+          .attr("fill", function(d) {
+          return d.visible ? color(d.name) : "#F1F1F2";});
+
+        d3.select("#line-" + d.name.replace(" ", "").replace("/", ""))
+          .transition()
+          .style("stroke-width", 1.5);
+      })
+      
+  issue.append("text")
+      .attr("x", width + (margin.right/3)) 
+      .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace); })  // (return (11.25/2 =) 5.625) + i * (5.625) 
+      .text(function(d) { return d.name; }); 
+
+  // Hover line 
+  var hoverLineGroup = svg.append("g") 
+            .attr("class", "hover-line");
+
+  var hoverLine = hoverLineGroup // linea con atributos básicos
+        .append("line")
+            .attr("id", "hover-line")
+            .attr("x1", 10).attr("x2", 10) 
+            .attr("y1", 0).attr("y2", height + 10)
+            .style("pointer-events", "none") 
+            .style("opacity", 1e-6); // poacidad 0
+
+  var hoverDate = hoverLineGroup
+        .append('text')
+            .attr("class", "hover-text")
+            .attr("y", height - (height-40)) // hover feha y posiion texto
+            .attr("x", width - 150) // hover fecha
+            .style("fill", "#E6E7E8");
+
+// toma los vaslores para las catgorias de la primera fila, elimnado la primer colimna de Fecha 
+ var columnNames = d3.keys(ds[0]) 
+                                     
+                  .slice(1); 
+
+  // Crea grupo de elemntos tooltip, blind cada colunma con elemento g grar elemento g para cada columna
+  var focus = issue.select("g") 
+      .data(columnNames) 
+    .enter().append("g") 
+      .attr("class", "focus"); 
+
+  focus.append("text") 
+        .attr("class", "tooltip")
+        .attr("x", width + 20) 
+        .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace); });      
+
+  // Eventos para mousemove
+  d3.select("#mouse-tracker") 
+  .on("mousemove", mousemove) 
+  .on("mouseout", function() {
+      hoverDate
+          .text(null) // remueve el texto mouse out
+
+      d3.select("#hover-line")
+          .style("opacity", 1e-6); // On mouse out liena invisible
+  });
+
+  function mousemove() { 
+      var mouse_x = d3.mouse(this)[0]; // Ubica la posixion x
+      var graph_x = xScale.invert(mouse_x); // 
+
+      
+      var format = d3.time.format('%b %Y'); 
+      
+      hoverDate.text(format(graph_x)); 
+      
+      d3.select("#hover-line") 
+          .attr("x1", mouse_x) 
+          .attr("x2", mouse_x)
+          .style("opacity", 1); // Making line visible
+
+      // Legend tooltips // http://www.d3noob.org/2014/07/my-favourite-tooltip-method-for-line.html
+
+      var x0 = xScale.invert(d3.mouse(this)[0]), 
+      i = bisectDate(ds, x0, 1), 
+        d0 = ds[i - 1],
+      d1 = ds[i],
+      d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+      
+      
+      focus.select("text").text(function(columnName){
+         return (d[columnName]);
+      });
+  }; 
+
+  //for brusher of the slider bar at the bottom
+  function brushed() {
+
+    xScale.domain(brush.empty() ? xScale2.domain() : brush.extent()); //Reseteo de escala brush vacio
+
+    svg.select(".x.axis") // replot de eje x
+          .call(xAxis);
+
+    maxY = findMaxY(categories); // Find mayomo y para los visibles
+    yScale.domain([0,maxY]); // Redefinir yAxis en base al minmo y máximo valor de los campos vicibles
+    
+    svg.select(".y.axis") 
+      .call(yAxis);   
+
+    issue.select("path") // Redibujar la linea sn base a valores
+      .transition()
+      .attr("d", function(d){
+          return d.visible ? line(d.values) : null; // Si es vixible grafica la linea para la seccion
+      });
+    
+  };      
+ ////////////
+ 
+ });
+
+}; 
+
+  function findMaxY(data){  // Define function "findMaxY"
+    var maxYValues = data.map(function(d) { 
+      if (d.visible){
+        return d3.max(d.values, function(value) { // Return max rating value
+          return value.rating; })
+      }
+    });
+    return d3.max(maxYValues);
+  }
+  
+
+function cambiaTitulo(group)
+{
+  
+    var svg = d3.select("#Titulo");  
+	svg.selectAll("#Tconsu.Tborra").text(group);
+	
+}
+
+function Titulo(group)
+{
+
+   
+   var svg = d3.select("#Titulo").append("svg")
+      .attr("width", 1200)
+      .attr("height", 90);
+	  
+	svg.append("text")
+		.style("font-family","Verdana")
+		.style("font-size"  , "30px")
+		.style("fill", "steelblue")
+		.attr("id","Tconsu")
+		.attr("class","Tborra")
+		.text(group)
+		.attr("x",10)
+		.attr("y", 50)
+		;
+		
+}
+Titulo("");
+</script>
+</body>
+</html>
